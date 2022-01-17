@@ -2972,7 +2972,7 @@ func getEndpointsBySubselectedPods(targetPort int32, pods []*api_v1.Pod, svcEps 
 				}
 				for _, address := range subset.Addresses {
 					if address.IP == pod.Status.PodIP {
-						addr := fmt.Sprintf("%v:%v", pod.Status.PodIP, targetPort)
+						addr := ipv6SafeAddrPort(pod.Status.PodIP, targetPort)
 						ownerType, ownerName := getPodOwnerTypeAndName(pod)
 						podEnd := podEndpoint{
 							Address: addr,
@@ -2989,6 +2989,13 @@ func getEndpointsBySubselectedPods(targetPort int32, pods []*api_v1.Pod, svcEps 
 		}
 	}
 	return endps
+}
+
+func ipv6SafeAddrPort(addr string, port int32) string {
+	if strings.Count(addr, ":") > 1 && !strings.Contains(addr, "[") {
+		addr = "[" + addr + "]"
+	}
+	return fmt.Sprintf("%v:%v", addr, port) // why %v?
 }
 
 func getPodName(pod *api_v1.ObjectReference) string {
@@ -3103,7 +3110,7 @@ func (lbc *LoadBalancerController) getEndpointsForPort(endps api_v1.Endpoints, b
 			if port.Port == targetPort {
 				var endpoints []podEndpoint
 				for _, address := range subset.Addresses {
-					addr := fmt.Sprintf("%v:%v", address.IP, port.Port)
+					addr := ipv6SafeAddrPort(address.IP, port.Port)
 					podEnd := podEndpoint{
 						Address: addr,
 					}
