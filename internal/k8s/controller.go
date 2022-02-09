@@ -19,6 +19,8 @@ package k8s
 import (
 	"context"
 	"fmt"
+	"net"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -2992,10 +2994,7 @@ func getEndpointsBySubselectedPods(targetPort int32, pods []*api_v1.Pod, svcEps 
 }
 
 func ipv6SafeAddrPort(addr string, port int32) string {
-	if strings.Count(addr, ":") > 1 && !strings.Contains(addr, "[") {
-		addr = "[" + addr + "]"
-	}
-	return fmt.Sprintf("%v:%v", addr, port) // why %v?
+	return net.JoinHostPort(addr, strconv.Itoa(int(port)))
 }
 
 func getPodName(pod *api_v1.ObjectReference) string {
