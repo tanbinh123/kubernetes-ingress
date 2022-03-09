@@ -29,6 +29,7 @@ import (
 	"github.com/nginxinc/kubernetes-ingress/internal/k8s/appprotectcommon"
 	"github.com/nginxinc/kubernetes-ingress/internal/k8s/appprotectdos"
 	"k8s.io/client-go/informers"
+	"k8s.io/client-go/rest"
 
 	"github.com/golang/glog"
 	"github.com/nginxinc/kubernetes-ingress/internal/k8s/secrets"
@@ -44,6 +45,7 @@ import (
 	"k8s.io/client-go/tools/leaderelection"
 	"k8s.io/client-go/tools/record"
 
+	cm_controller "github.com/nginxinc/kubernetes-ingress/internal/certmanager"
 	"github.com/nginxinc/kubernetes-ingress/internal/configs"
 	"github.com/nginxinc/kubernetes-ingress/internal/metrics/collectors"
 
@@ -95,6 +97,7 @@ type LoadBalancerController struct {
 	client                        kubernetes.Interface
 	confClient                    k8s_nginx.Interface
 	dynClient                     dynamic.Interface
+	restConfig                    *rest.Config
 	cacheSyncs                    []cache.InformerSynced
 	sharedInformerFactory         informers.SharedInformerFactory
 	confSharedInformerFactorry    k8s_nginx_informers.SharedInformerFactory
@@ -158,6 +161,7 @@ type LoadBalancerController struct {
 	appProtectConfiguration       appprotect.Configuration
 	dosConfiguration              *appprotectdos.Configuration
 	configMap                     *api_v1.ConfigMap
+	certManagerController         *cm_controller.CmController
 }
 
 var keyFunc = cache.DeletionHandlingMetaNamespaceKeyFunc
@@ -167,6 +171,7 @@ type NewLoadBalancerControllerInput struct {
 	KubeClient                   kubernetes.Interface
 	ConfClient                   k8s_nginx.Interface
 	DynClient                    dynamic.Interface
+	RestConfig                   *rest.Config
 	ResyncPeriod                 time.Duration
 	Namespace                    string
 	NginxConfigurator            *configs.Configurator
@@ -205,6 +210,7 @@ func NewLoadBalancerController(input NewLoadBalancerControllerInput) *LoadBalanc
 		client:                       input.KubeClient,
 		confClient:                   input.ConfClient,
 		dynClient:                    input.DynClient,
+		restConfig:                   input.RestConfig,
 		configurator:                 input.NginxConfigurator,
 		defaultServerSecret:          input.DefaultServerSecret,
 		appProtectEnabled:            input.AppProtectEnabled,
@@ -243,6 +249,10 @@ func NewLoadBalancerController(input NewLoadBalancerControllerInput) *LoadBalanc
 		if err != nil {
 			glog.Fatalf("failed to create Spiffe Controller: %v", err)
 		}
+	}
+
+	if input.CertManagerEnabled {
+		lbc.certManagerController = cm_controller.NewCmController(cm_controller.BuildOpts(context.TODO(), lbc.restConfig, lbc.client, lbc.namespace, lbc.recorder))
 	}
 
 	glog.V(3).Infof("Nginx Ingress Controller has class: %v", input.IngressClass)
@@ -537,6 +547,9 @@ func (lbc *LoadBalancerController) Run() {
 		if err != nil {
 			glog.Fatal(err)
 		}
+	}
+	if lbc.certManagerController != nil {
+		go lbc.certManagerController.Run(lbc.ctx.Done())
 	}
 	if lbc.leaderElector != nil {
 		go lbc.leaderElector.Run(lbc.ctx)
