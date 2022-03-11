@@ -10,9 +10,7 @@ docs: "DOCS-598"
 
 The TransportServer resource allows you to configure TCP, UDP, and TLS Passthrough load balancing. The resource is implemented as a [Custom Resource](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/).
 
-This document is the reference documentation for the TransportServer resource. To see additional examples of using the resource for specific use cases, go to the [examples/custom-resources](https://github.com/nginxinc/kubernetes-ingress/tree/v2.1.0/examples/custom-resources) folder in our GitHub repo.
-
-> **Feature Status**: The TransportServer resource is available as a preview feature[^1]: We might introduce some backward-incompatible changes to the resource definition. The feature is disabled by default. To enable it, set the [enable-preview-policies](/nginx-ingress-controller/configuration/global-configuration/command-line-arguments/#cmdoption-enable-preview-policies) command-line argument of the Ingress Controller.
+This document is the reference documentation for the TransportServer resource. To see additional examples of using the resource for specific use cases, go to the [examples/custom-resources](https://github.com/nginxinc/kubernetes-ingress/tree/v2.1.1/examples/custom-resources) folder in our GitHub repo.
 
 ## Prerequisites
 
@@ -168,7 +166,7 @@ Note: This feature is supported only in NGINX Plus.
 |``jitter`` | The time within which each health check will be randomly delayed. By default, there is no delay. | ``string`` | No |
 |``fails`` | The number of consecutive failed health checks of a particular upstream server after which this server will be considered unhealthy. The default is ``1``. | ``integer`` | No |
 |``passes`` | The number of consecutive passed health checks of a particular upstream server after which the server will be considered healthy. The default is ``1``. | ``integer`` | No |
-|``port`` | The port used for health check requests. By default, the port of the upstream is used. Note: in contrast with the port of the upstream, this port is not a service port, but a port of a pod. | ``integer`` | No |
+|``port`` | The port used for health check requests. By default, the [server port is used](https://nginx.org/en/docs/stream/ngx_stream_upstream_hc_module.html#health_check_port). Note: in contrast with the port of the upstream, this port is not a service port, but a port of a pod. | ``integer`` | No |
 |``match`` | Controls the data to send and the response to expect for the healthcheck. | [match](#upstreamhealthcheckmatch) | No |
 {{% /table %}}
 
@@ -378,9 +376,5 @@ The [ConfigMap](/nginx-ingress-controller/configuration/global-configuration/con
 
 ## Limitations
 
-The TransportServer resource is a preview feature. Currently, it comes with the following limitation:
+The TransportServer resource currently comes with the following limitation:
 * When using TLS Passthrough, it is not possible to configure [Proxy Protocol](https://github.com/nginxinc/kubernetes-ingress/tree/v2.0.1/examples/proxy-protocol) for port 443 both for regular HTTPS and TLS Passthrough traffic.
-
-## Footnotes
-
-[^1]: Capabilities labeled in preview status are fully supported.

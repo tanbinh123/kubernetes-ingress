@@ -31,7 +31,7 @@ jobs:
       k8s_version: ${{ steps.vars.outputs.k8s_version }}
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - name: Set KIC version
@@ -40,7 +40,7 @@ jobs:
           tag=$(git tag --sort=-version:refname | head -n1)
           echo "::set-output name=tag::${tag//v}"
       - name: Checkout Repository at ${{ steps.kic.outputs.tag }}
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           ref: refs/tags/v${{ steps.kic.outputs.tag }}
       - name: Set NGINX versions
@@ -92,7 +92,7 @@ jobs:
     needs: [check, variables]
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
           ref: refs/tags/v${{ needs.variables.outputs.kic-tag }}
@@ -141,17 +141,21 @@ jobs:
             marker: vsr
             platforms: linux/arm,linux/arm64,linux/amd64,linux/ppc64le,linux/s390x
             needs-updating: ${{ needs.check.outputs.needs-updating-alpine }}
+          - image: alpine-opentracing
+            marker: policies
+            platforms: linux/arm,linux/arm64,linux/amd64,linux/ppc64le,linux/s390x
+            needs-updating: ${{ needs.check.outputs.needs-updating-alpine }}
           - image: opentracing
             marker: vs
             platforms: linux/arm,linux/arm64,linux/amd64,linux/ppc64le,linux/s390x
             needs-updating: ${{ needs.check.outputs.needs-updating-debian }}
           - image: ubi
             marker: ts
-            platforms: linux/arm64,linux/amd64
+            platforms: linux/arm64,linux/amd64,linux/s390x
             needs-updating: ${{ needs.check.outputs.needs-updating-ubi }}
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           ref: refs/tags/v${{ needs.variables.outputs.kic-tag }}
         if: ${{ matrix.needs-updating == 'true' }}
@@ -217,7 +221,7 @@ jobs:
             public.ecr.aws/nginx/nginx-ingress
           flavor: |
             latest=true
-            suffix=${{ matrix.image != 'debian' && '-' || '' }}${{ matrix.image != 'debian' && matrix.image != 'opentracing' && matrix.image || '' }}${{ matrix.image == 'opentracing' && 'ot' || '' }},onlatest=true
+            suffix=${{ contains(matrix.image, 'ubi') && '-ubi' || '' }}${{ contains(matrix.image, 'alpine') && '-alpine' || '' }}${{ contains(matrix.image, 'opentracing') && '-ot' || '' }},onlatest=true
           tags: |
             type=raw,value=${{ needs.variables.outputs.kic-tag }}
             type=raw,value=${{ steps.tag.outputs.short }}
@@ -240,18 +244,17 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           platforms: ${{ matrix.platforms }}
           push: true
-          pull: true
+          no-cache: true
           build-args: |
             BUILD_OS=${{ matrix.image }}
             IC_VERSION=v${{ needs.variables.outputs.kic-tag }}
         if: ${{ matrix.needs-updating == 'true' }}
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.2.1
+        uses: aquasecurity/trivy-action@0.2.2
         continue-on-error: true
         with:
-          image-ref: nginx/nginx-ingress:${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.version'] }}
-          format: 'template'
-          template: '@/contrib/sarif.tpl'
+          image-ref: nginx/nginx-ingress:${{ steps.meta.outputs.version }}
+          format: 'sarif'
           output: 'trivy-results-${{ matrix.image }}.sarif'
           ignore-unfixed: 'true'
         if: ${{ matrix.needs-updating == 'true' }}
@@ -287,7 +290,7 @@ jobs:
                 color: "good",
                 fields: [{
                   title: "Docker Image",
-                  value: "<https://hub.docker.com/r/nginx/nginx-ingress/tags?page=1&ordering=last_updated&name=${{ needs.variables.outputs.kic-tag }}|nginx/nginx-ingress:${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.version'] }}>",
+                  value: `<https://hub.docker.com/r/nginx/nginx-ingress/tags?page=1&ordering=last_updated&name=${{ needs.variables.outputs.kic-tag }}|nginx/nginx-ingress:${{ steps.meta.outputs.version }}>`,
                   short: true
                 },
                 {
@@ -297,7 +300,7 @@ jobs:
                 },
                 {
                   title: "Commit Message",
-                  value: "${{ steps.slack.outputs.message }}",
+                  value: `${{ steps.slack.outputs.message }}`,
                   short: true
                 },
                 {

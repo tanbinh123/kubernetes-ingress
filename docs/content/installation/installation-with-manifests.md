@@ -23,7 +23,7 @@ This document describes how to install the NGINX Ingress Controller in your Kube
     ```
     $ git clone https://github.com/nginxinc/kubernetes-ingress/
     $ cd kubernetes-ingress/deployments
-    $ git checkout v2.1.0
+    $ git checkout v2.1.1
     ```
 
 ## 1. Configure RBAC
@@ -113,7 +113,7 @@ If you would like to use the App Protect Dos module, create the following additi
 
    ```
    $ kubectl apply -f common/crds/appprotectdos.f5.com_apdoslogconfs.yaml
-   $ kubectl apply -f common/crds/appprotectdos.f5.com_apdospolicies.yaml
+   $ kubectl apply -f common/crds/appprotectdos.f5.com_apdospolicy.yaml
    $ kubectl apply -f common/crds/appprotectdos.f5.com_dosprotectedresources.yaml
    ```
 
