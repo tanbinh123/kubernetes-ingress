@@ -101,13 +101,13 @@ controller:
   terminationGracePeriodSeconds: 30
 
   ## The resources of the Ingress controller pods.
-  resources: {}
-    # limits:
-    #   cpu: 100m
-    #   memory: 64Mi
-    # requests:
-    #   cpu: 100m
-    #   memory: 64Mi
+  resources:
+    limits:
+      cpu: 1
+      memory: 1Gi
+    requests:
+      cpu: 100m
+      memory: 128Mi
 
   ## The tolerations of the Ingress controller pods.
   tolerations: []
