@@ -3,7 +3,7 @@ name: Continuous Integration
 on:
   push:
     branches:
-      - master
+      - main
       - release-*
     paths-ignore:
       - 'docs/**'
@@ -13,7 +13,7 @@ on:
       - 'v[0-9]+.[0-9]+.[0-9]+'
   pull_request:
     branches:
-      - master
+      - main
       - release-*
     paths-ignore:
       - 'docs/**'
@@ -167,7 +167,8 @@ jobs:
                                                 {\"image\": \"ubi-plus\", \"marker\": \"policies\"}], \
                                               \"k8s\": [\"${{ needs.checks.outputs.k8s_latest }}\"]}"
           else
-            echo "::set-output name=matrix::{\"k8s\": [\"1.19.16\", \"1.20.15\", \"1.21.10\", \"1.22.7\", \"${{ needs.checks.outputs.k8s_latest }}\"]}"
+            echo "::set-output name=matrix::{\"k8s\": [\"1.19.16\", \"1.20.15\", \"1.21.10\", \"1.22.7\", \"${{ needs.checks.outputs.k8s_latest }}\"], \
+                                             \"images\": [{\"image\": \"debian\"}, {\"image\": \"debian-plus\"}]}"
           fi
 
   smoke-tests:
@@ -359,7 +360,7 @@ jobs:
             org.opencontainers.image.description=NGINX Ingress Controller for Kubernetes
             org.opencontainers.image.documentation=https://docs.nginx.com/nginx-ingress-controller
             org.opencontainers.image.vendor=NGINX Inc <kubernetes@nginx.com>
-            io.artifacthub.package.readme-url=https://raw.githubusercontent.com/nginxinc/kubernetes-ingress/master/README.md
+            io.artifacthub.package.readme-url=https://raw.githubusercontent.com/nginxinc/kubernetes-ingress/main/README.md
             io.artifacthub.package.logo-url=https://docs.nginx.com/nginx-ingress-controller/images/icons/NGINX-Ingress-Controller-product-icon.svg
             io.artifacthub.package.maintainers=[{"name":"NGINX Inc","email":"kubernetes@nginx.com"}]
             io.artifacthub.package.license=Apache-2.0
