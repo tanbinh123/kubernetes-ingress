@@ -1042,6 +1042,7 @@ func (p *policiesCfg) addWAFConfig(
 	}
 
 	if waf.SecurityLog != nil && waf.SecurityLogs == nil {
+		glog.V(2).Info("the field securityLog is deprecated nad will be removed in future releases. Use field securityLogs instead")
 		p.WAF.ApSecurityLogEnable = true
 
 		logConfKey := waf.SecurityLog.ApLogConf

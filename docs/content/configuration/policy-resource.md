@@ -375,7 +375,7 @@ waf:
     apLogConf: "default/logconf"
     logDest: "syslog:server=syslog-svc-secondary.default:514"    
 ```
-> Note: The field `waf.securityLog` is supported but will be ignored if `waf.securityLogs` is populated.
+> Note: The field `waf.securityLog` is deprecated and will be removed in future releases.It will be ignored if `waf.securityLogs` is populated.
 > Note: The feature is implemented using the NGINX Plus [NGINX App Protect Module](https://docs.nginx.com/nginx-app-protect/configuration/).
 
 {{% table %}}
