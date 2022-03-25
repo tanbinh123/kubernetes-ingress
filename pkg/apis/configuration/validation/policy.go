@@ -14,7 +14,7 @@ import (
 )
 
 // ValidatePolicy validates a Policy.
-func ValidatePolicy(policy *v1.Policy, isPlus, enablePreviewPolicies, enableAppProtect bool) error {
+func ValidatePolicy(policy *v1.Policy, isPlus, enableAppProtect bool) error {
 	allErrs := validatePolicySpec(&policy.Spec, field.NewPath("spec"), isPlus, enableAppProtect)
 	return allErrs.ToAggregate()
 }
