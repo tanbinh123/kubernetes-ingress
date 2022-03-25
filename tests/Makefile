@@ -16,6 +16,8 @@ KIND_TEMPLATE_FILE_PATH=kind/kind-config-template.yaml
 IP_FAMILY ?= ipv4
 IP_ADDR_PROPERTY = .IPAddress
 IP_ADDR_FMT = "%s"
+API_SERVER_ADDR = 127.0.0.1
+
 
 ifeq (${IP_FAMILY}, ipv6)
 IP_ADDR_PROPERTY = .GlobalIPv6Address
@@ -56,7 +58,7 @@ run-tests-in-kind: update-test-kind-config
 .PHONY: create-kind-cluster
 create-kind-cluster:
 	$(eval K8S_VERSION=$(shell grep "K8S_VERSION:" ../.github/workflows/ci.yml | awk -F" " '{print $$2}'))
-	cat ${KIND_TEMPLATE_FILE_PATH} | sed "s/{{.IPFamily}}/${IP_FAMILY}/" > kind-config.yaml
+	cat ${KIND_TEMPLATE_FILE_PATH} | sed "s/{{.IPFamily}}/${IP_FAMILY}/" | sed "s/{{.APIServerAddress}}/${API_SERVER_ADDR}/"  > kind-config.yaml
 	kind create cluster --image kindest/node:v$(K8S_VERSION) --config kind-config.yaml
 	kind export kubeconfig --kubeconfig $(KIND_KUBE_CONFIG_FOLDER)/config
 	kind load docker-image ${BUILD_IMAGE}
@@ -64,3 +66,4 @@ create-kind-cluster:
 .PHONY: delete-kind-cluster
 delete-kind-cluster:
 	kind delete cluster
+
